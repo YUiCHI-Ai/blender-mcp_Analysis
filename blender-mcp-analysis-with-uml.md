@@ -54,14 +54,8 @@ graph LR
 ### クラス図
 
 以下のMermaid図は、BlenderMCPの主要クラスとその関係を示しています：
-
 ```mermaid
 classDiagram
-    %% クラスのスタイル定義
-    classDef addonClass fill:#ffcdb2,stroke:#ffb4a2,color:#333
-    classDef connectionClass fill:#b5ead7,stroke:#78c6a3,color:#333
-    classDef mcpClass fill:#c7ceea,stroke:#9face6,color:#333
-
     class BlenderMCPServer {
         +host: string
         +port: int
@@ -100,14 +94,14 @@ classDiagram
         +run()
     }
     
-    %% 関係の色付け
     BlenderConnection --> FastMCP : 使用される
     FastMCP --> BlenderConnection : コマンド送信
     
-    %% クラスへのスタイル適用
-    class BlenderMCPServer addonClass
-    class BlenderConnection connectionClass
-    class FastMCP mcpClass
+    %% スタイル設定（注釈として残す）
+    %% BlenderMCPServer: Blenderアドオン側のクラス
+    %% BlenderConnection: 接続管理クラス
+    %% FastMCP: MCPサーバークラス
+```
 ```
 
 ## 通信プロトコル
