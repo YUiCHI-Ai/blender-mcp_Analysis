@@ -1,8 +1,18 @@
-# BlenderMCP：Blender と Claude AI を連携させる Model Context Protocol の詳細解析
+---
+title: "BlenderMCP解析：BlenderとClaude AIを連携させるModel Context Protocolの仕組み"
+emoji: "🔄"
+type: "tech"
+topics: ["Blender", "AI", "Claude", "MCP", "3D"]
+published: false
+---
+
+# BlenderMCP：BlenderとClaude AIを連携させるModel Context Protocolの詳細解析
 
 ## はじめに
 
-BlenderMCPは、Model Context Protocol (MCP) を通じてBlenderをClaude AIに接続し、自然言語プロンプトによる3Dモデリング、シーン作成、操作を可能にするプロジェクトです。このプロジェクトにより、ユーザーはClaude AIに対して「赤い立方体を作成して」や「ダンジョンの中に金の壺を守るドラゴンがいるシーンを作成して」といった自然言語の指示を出すだけで、Blenderで3Dコンテンツを生成・操作できるようになります。
+BlenderMCPは、Model Context Protocol (MCP) を通じてBlenderをClaude AIに接続し、自然言語プロンプトによる3Dモデリング、シーン作成、操作を可能にする革新的なプロジェクトです。
+
+このプロジェクトにより、ユーザーはClaude AIに対して「赤い立方体を作成して」や「ダンジョンの中に金の壺を守るドラゴンがいるシーンを作成して」といった自然言語の指示を出すだけで、Blenderで3Dコンテンツを生成・操作できるようになります。
 
 本記事では、BlenderMCPの内部実装を詳細に解析し、その仕組みと技術的な側面を深掘りします。
 
@@ -15,7 +25,7 @@ BlenderMCPは主に2つの主要コンポーネントで構成されています
 
 ### コンポーネント図
 
-以下のMermaid図は、BlenderMCPの主要コンポーネントとその関係を示しています：
+以下の図は、BlenderMCPの主要コンポーネントとその関係を示しています：
 
 ```mermaid
 graph LR
@@ -53,7 +63,8 @@ graph LR
 
 ### クラス図
 
-以下のMermaid図は、BlenderMCPの主要クラスとその関係を示しています：
+以下の図は、BlenderMCPの主要クラスとその関係を示しています：
+
 ```mermaid
 classDiagram
     class BlenderMCPServer {
@@ -96,21 +107,17 @@ classDiagram
     
     BlenderConnection --> FastMCP : 使用される
     FastMCP --> BlenderConnection : コマンド送信
-    
-    %% スタイル設定（注釈として残す）
-    %% BlenderMCPServer: Blenderアドオン側のクラス
-    %% BlenderConnection: 接続管理クラス
-    %% FastMCP: MCPサーバークラス
-```
+    BlenderConnection --> BlenderMCPServer : 接続・コマンド送信
+    BlenderMCPServer --> BlenderConnection : レスポンス返却
 ```
 
 ## 通信プロトコル
 
-BlenderMCPはTCPソケットを介したシンプルなJSONベースのプロトコルを使用しています：
+BlenderMCPはTCPソケットを介したシンプルなJSONベースのプロトコルを使用しています。
 
 ### シーケンス図
 
-以下のMermaid図は、コマンド実行の流れを示しています：
+以下の図は、コマンド実行の流れを示しています：
 
 ```mermaid
 sequenceDiagram
@@ -156,33 +163,39 @@ sequenceDiagram
     end
 ```
 
+このシーケンス図は、ユーザーからの「赤い立方体を作成して」という指示がどのように処理されるかを示しています。各層（ユーザー/AI、AI/MCPサーバー、MCPサーバー/アドオン、アドオン/Blender）での通信フローが色分けされており、データの変換と処理の流れが明確に表現されています。
+
+### JSONプロトコル詳細
+
 - **コマンド**は`type`と任意の`params`を持つJSONオブジェクトとして送信されます
-  ```json
-  {
-    "type": "create_object",
-    "params": {
-      "type": "CUBE",
-      "location": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1],
-      "name": "MyCube"
-    }
+
+```json
+{
+  "type": "create_object",
+  "params": {
+    "type": "CUBE",
+    "location": [0, 0, 0],
+    "rotation": [0, 0, 0],
+    "scale": [1, 1, 1],
+    "name": "MyCube"
   }
-  ```
+}
+```
 
 - **レスポンス**は`status`と`result`または`message`を持つJSONオブジェクトです
-  ```json
-  {
-    "status": "success",
-    "result": {
-      "name": "MyCube",
-      "type": "MESH",
-      "location": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1]
-    }
+
+```json
+{
+  "status": "success",
+  "result": {
+    "name": "MyCube",
+    "type": "MESH",
+    "location": [0, 0, 0],
+    "rotation": [0, 0, 0],
+    "scale": [1, 1, 1]
   }
-  ```
+}
+```
 
 ## 主要コンポーネントの詳細解析
 
