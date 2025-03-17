@@ -19,6 +19,13 @@ BlenderMCPは主に2つの主要コンポーネントで構成されています
 
 ```mermaid
 graph LR
+    %% ノードのスタイル定義
+    classDef user fill:#f9d5e5,stroke:#eeac99,color:#333,font-weight:bold
+    classDef ai fill:#d3f8e2,stroke:#77c9d4,color:#333,font-weight:bold
+    classDef server fill:#e3f6f5,stroke:#bae8e8,color:#333,font-weight:bold
+    classDef addon fill:#ffd8be,stroke:#f8a978,color:#333,font-weight:bold
+    classDef external fill:#f0e6ef,stroke:#c8b8db,color:#333,font-weight:bold
+
     User[ユーザー] -->|指示| Claude[Claude AI]
     Claude -->|MCP| Server[MCPサーバー\nserver.py]
     Server -->|ソケット通信| Addon[Blenderアドオン\naddon.py]
@@ -26,6 +33,15 @@ graph LR
     Addon -->|API呼び出し| PolyHaven[Poly Haven API]
     Addon -->|API呼び出し| Hyper3D[Hyper3D Rodin API]
     Blender -->|レンダリング結果| User
+
+    %% クラスの適用
+    class User user
+    class Claude ai
+    class Server server
+    class Addon addon
+    class Blender external
+    class PolyHaven external
+    class Hyper3D external
 ```
 
 これらのコンポーネントは以下のように連携して動作します：
@@ -41,6 +57,11 @@ graph LR
 
 ```mermaid
 classDiagram
+    %% クラスのスタイル定義
+    classDef addonClass fill:#ffcdb2,stroke:#ffb4a2,color:#333
+    classDef connectionClass fill:#b5ead7,stroke:#78c6a3,color:#333
+    classDef mcpClass fill:#c7ceea,stroke:#9face6,color:#333
+
     class BlenderMCPServer {
         +host: string
         +port: int
@@ -79,8 +100,14 @@ classDiagram
         +run()
     }
     
+    %% 関係の色付け
     BlenderConnection --> FastMCP : 使用される
     FastMCP --> BlenderConnection : コマンド送信
+    
+    %% クラスへのスタイル適用
+    class BlenderMCPServer addonClass
+    class BlenderConnection connectionClass
+    class FastMCP mcpClass
 ```
 
 ## 通信プロトコル
@@ -93,20 +120,46 @@ BlenderMCPはTCPソケットを介したシンプルなJSONベースのプロト
 
 ```mermaid
 sequenceDiagram
+    %% 参加者のスタイル定義
     participant User as ユーザー
     participant Claude as Claude AI
     participant MCP as MCPサーバー
     participant Addon as Blenderアドオン
     participant Blender as Blender
-
-    User->>Claude: 自然言語指示<br>「赤い立方体を作成して」
-    Claude->>MCP: MCPツール呼び出し<br>create_object()
-    MCP->>Addon: JSONコマンド送信<br>{"type": "create_object", "params": {...}}
-    Addon->>Blender: bpy API呼び出し<br>bpy.ops.mesh.primitive_cube_add()
-    Blender-->>Addon: オブジェクト作成結果
-    Addon->>MCP: JSONレスポンス<br>{"status": "success", "result": {...}}
-    MCP->>Claude: 実行結果
-    Claude->>User: 結果の説明<br>「立方体を作成しました」
+    
+    %% 色の定義
+    rect rgb(255, 240, 245)
+        Note over User,Claude: ユーザーとAIの対話
+        User->>Claude: 自然言語指示<br>「赤い立方体を作成して」
+    end
+    
+    rect rgb(230, 248, 243)
+        Note over Claude,MCP: AI-MCPサーバー間通信
+        Claude->>MCP: MCPツール呼び出し<br>create_object()
+    end
+    
+    rect rgb(255, 245, 230)
+        Note over MCP,Addon: MCPサーバー-アドオン間通信
+        MCP->>Addon: JSONコマンド送信<br>{"type": "create_object", "params": {...}}
+    end
+    
+    rect rgb(240, 240, 250)
+        Note over Addon,Blender: アドオン-Blender間通信
+        Addon->>Blender: bpy API呼び出し<br>bpy.ops.mesh.primitive_cube_add()
+        Blender-->>Addon: オブジェクト作成結果
+    end
+    
+    rect rgb(255, 245, 230)
+        Addon->>MCP: JSONレスポンス<br>{"status": "success", "result": {...}}
+    end
+    
+    rect rgb(230, 248, 243)
+        MCP->>Claude: 実行結果
+    end
+    
+    rect rgb(255, 240, 245)
+        Claude->>User: 結果の説明<br>「立方体を作成しました」
+    end
 ```
 
 - **コマンド**は`type`と任意の`params`を持つJSONオブジェクトとして送信されます
